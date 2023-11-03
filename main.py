@@ -2,6 +2,7 @@ import scrapy
 import os
 from neo4j import GraphDatabase
 from scrapy.exceptions import CloseSpider
+import time
 
 '''
 Grupo : Christian Dambock Gomes , Guilherme Lozano Borges, Wellington Lira
@@ -44,9 +45,9 @@ conn = Neo4jConnection(uri=os.environ['NEO4J_URI'],
 
 
 # Spider do Scrapy
-class PokeSpider(scrapy.Spider):
+class MovieSpider(scrapy.Spider):
 
-  name = 'pokespider'
+  name = 'moviespider'
   start_urls = [
     'https://editorial.rottentomatoes.com/guide/best-horror-movies-of-all-time/'
   ]
@@ -56,8 +57,8 @@ class PokeSpider(scrapy.Spider):
     # Sistemas de Recomendação de Filmes
     movie_name_to_search = input("Escolha um filme, e o sistema irá recomendar os 5   top filmes parecidos: ")
     find_similar_movies(movie_name_to_search)
-    time.sleep(10)  # Delay de 10 segundos
-
+    time.sleep(10)  # Delay de 10 segundos para atualizar o Neo4j 
+    
     # Inicio do scraping
     linhas = response.css('div.article_movie_title')
     for linha in linhas:
@@ -65,13 +66,13 @@ class PokeSpider(scrapy.Spider):
       porcentagem = linha.css('div > h2 > span.tMeterScore::text').get()
       ano = linha.css('div > h2 > span.subtle.start-year::text').get()
       yield response.follow(link.get(),
-                            self.parser_pokemon,
+                            self.parser_movie,
                             meta={
                               "porcentagem": porcentagem,
                               "ano": ano
                             })
 
-  def parser_pokemon(self, response):
+  def parser_movie(self, response):
     nome = response.css(
       'div.thumbnail-scoreboard-wrap > score-board-deprecated > h1::text').get(
       )
